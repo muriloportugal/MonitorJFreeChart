@@ -23,7 +23,7 @@ public class ConexaoSqlite {
          * Conecta ao banco de dados ou o cria caso ele nao exista
          */
         try {
-            String url = "jdbc:sqlite:D:/Bibliotecas/Desktop/monitordb";
+            String url = "jdbc:sqlite:D:\\monitordb";
             this.conexao = DriverManager.getConnection(url);
         } catch (Exception e) {
             System.out.println(e.getMessage());

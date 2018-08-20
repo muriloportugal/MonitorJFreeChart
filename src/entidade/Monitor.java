@@ -107,11 +107,7 @@ public class Monitor {
 
     @Override
     public String toString() {
-        //return super.toString(); //To change body of generated methods, choose Tools | Templates.
-//        String monitorString = this.getPathFile().concat(" ")
-//                .concat(String.valueOf(this.getDirectorySizeGB())).concat(" ")
-//                .concat(this.getDataCriacao());
-        String monitorString = this.getPathFile();
+        String monitorString = this.getPathFile().substring(this.getPathFile().lastIndexOf("\\")+1, this.getPathFile().length());
         return monitorString;
     }
     
@@ -122,5 +118,8 @@ public class Monitor {
         return stringfyMonitor;
     }
     
+   public String getPathFileClear(){
+       return this.getPathFile().substring(this.getPathFile().lastIndexOf("\\")+1, this.getPathFile().length());
+   }
        
 }

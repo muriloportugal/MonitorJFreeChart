@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
 
 /**
  *
@@ -33,7 +32,7 @@ public class CRUDMonitor {
         if (groupByPathFile) {
             sqlSelect = "SELECT *, (DirectorySize /1073741824) as DirectorySizeGB " +
                                     "FROM monitor group by Pathfile " +
-                                    "order by Pathfile, datacriacao;";
+                                    "order by DirectorySizeGB;";
         }else{
             sqlSelect = "SELECT *, (DirectorySize /1073741824) as DirectorySizeGB " +
                                     "FROM monitor " +

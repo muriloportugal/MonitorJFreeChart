@@ -7,6 +7,8 @@ package telas;
 
 import db.CRUDMonitor;
 import entidade.Monitor;
+import java.awt.BorderLayout;
+import java.awt.Font;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,12 +16,20 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.PieSectionLabelGenerator;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
+import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -37,19 +47,29 @@ public class Principal extends javax.swing.JFrame {
     
     private final CRUDMonitor crudMonitor;
     private final List<Monitor> listMonitor;
-    private DefaultListModel defaultListModel;
-    private DefaultCategoryDataset dcd;
+    private final DefaultListModel<Monitor> defaultListModel;
+    private final DefaultCategoryDataset dcd;
     private JFreeChart freeChart;
     private ChartPanel chartPnl;
+    private TimeSeries timeSeries;
+    private JList<Monitor> jListMonitor;
+    private String pathFileTime = "";
+    private DefaultPieDataset pieDataset;
     
     public Principal() {
         initComponents();
-        jListMonitor.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.jListMonitor = new JList<>();
+        this.jListMonitor.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.jListMonitor.setFont(new Font(" ", Font.BOLD, 14));
+        this.jPLista.setLayout(new BorderLayout());
+        this.jPLista.add(this.jListMonitor);
         this.crudMonitor = new CRUDMonitor();
         this.listMonitor = crudMonitor.getAllMonitor(true);
-        this.defaultListModel = new DefaultListModel();
+        this.defaultListModel = new DefaultListModel<>();
         this.dcd = new DefaultCategoryDataset();
-        carregaListaeGraficoGeral();
+        carregaGraficoUsoAtual();
+        carregaGraficoTempo();
+        carregaGraficoPizza();
         
     }
 
@@ -63,42 +83,24 @@ public class Principal extends javax.swing.JFrame {
     private void initComponents() {
 
         jPLista = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jListMonitor = new javax.swing.JList();
         jPGrafico = new javax.swing.JPanel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        jListMonitor.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jListMonitor.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jListMonitorMouseClicked(evt);
-            }
-        });
-        jScrollPane1.setViewportView(jListMonitor);
 
         javax.swing.GroupLayout jPListaLayout = new javax.swing.GroupLayout(jPLista);
         jPLista.setLayout(jPListaLayout);
         jPListaLayout.setHorizontalGroup(
             jPListaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPListaLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
-                .addContainerGap())
+            .addGap(0, 207, Short.MAX_VALUE)
         );
         jPListaLayout.setVerticalGroup(
             jPListaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPListaLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
-                .addContainerGap())
+            .addGap(0, 455, Short.MAX_VALUE)
         );
 
         jPGrafico.setLayout(new javax.swing.BoxLayout(jPGrafico, javax.swing.BoxLayout.LINE_AXIS));
+        jPGrafico.add(jTabbedPane1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -107,8 +109,8 @@ public class Principal extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPLista, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPGrafico, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(jPGrafico, javax.swing.GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -125,56 +127,16 @@ public class Principal extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jListMonitorMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jListMonitorMouseClicked
-        Monitor monitor = (Monitor) jListMonitor.getSelectedValue();
-        carregaGraficoTempo(monitor.getPathFile());
-    }//GEN-LAST:event_jListMonitorMouseClicked
-
-    /**
-     * @param args the command line arguments
-     */
-//    public static void main(String args[]) {
-//        /* Set the Nimbus look and feel */
-//        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-//        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-//         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-//         */
-//        try {
-//            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-//                if ("Nimbus".equals(info.getName())) {
-//                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-//                    break;
-//                }
-//            }
-//        } catch (ClassNotFoundException ex) {
-//            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (InstantiationException ex) {
-//            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (IllegalAccessException ex) {
-//            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-//            java.util.logging.Logger.getLogger(Principal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        }
-//        //</editor-fold>
-//
-//        /* Create and display the form */
-//        java.awt.EventQueue.invokeLater(new Runnable() {
-//            public void run() {
-//                new Principal().setVisible(true);
-//            }
-//        });
-//    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JList jListMonitor;
     private javax.swing.JPanel jPGrafico;
     private javax.swing.JPanel jPLista;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
 
-    private void carregaListaeGraficoGeral() {
+    private void carregaGraficoUsoAtual() {
         listMonitor.stream().forEach((monit) -> {
-            //Monta as informações do grafico
+            
             if (monit.getDirectorySizeGB()>5  && //tira do grafico pastas menores que 5gb
                     !monit.getPathFile().equals("d:\\")&&
                     !monit.getPathFile().equals("d:\\$RECYCLE.BIN")&&
@@ -188,44 +150,111 @@ public class Principal extends javax.swing.JFrame {
                 
                 this.defaultListModel.addElement(monit);
                             
-                String linha = monit.getPathFile().substring(monit.getPathFile().lastIndexOf("\\")+1, monit.getPathFile().length());
+                String linha = monit.getPathFileClear();
                 String coluna = monit.getDataCriacao().substring(0, 10);
+                //Monta o dataset do grafico
                 this.dcd.setValue(monit.getDirectorySizeGB(), linha, coluna);
             }
             
         }); 
         this.jListMonitor.setModel(defaultListModel);
+        //Cria o grafico
         this.freeChart = ChartFactory.createBarChart3D("Utilização por pasta", "Tamanho (Giga)", "Data", dcd,PlotOrientation.VERTICAL,true,true,true);
+        //Adiciona o grafico a este panel para que possa ser exibido.
         this.chartPnl = new ChartPanel(freeChart);
-        this.jPGrafico.removeAll();
-        this.jPGrafico.add(chartPnl);
-        this.jPGrafico.updateUI();
+        jTabbedPane1.add("Gráfico utilização Atual",chartPnl);
     }
 
-    private void carregaGraficoTempo(String pathFile) {
-        List<Monitor> simpleMonitor = crudMonitor.getMonitor(pathFile);
+    private void carregaGraficoTempo() {
+        List<Monitor> tempMonitor = crudMonitor.getAllMonitor(false);
         TimeSeriesCollection timeCollection = new TimeSeriesCollection();
-        TimeSeries timeSeries = new TimeSeries("Teste1");
-        simpleMonitor.stream().forEach((monit)->{
-            
-            String linha = monit.getPathFile().substring(monit.getPathFile().lastIndexOf("\\")+1, monit.getPathFile().length());
+
+        tempMonitor.stream().forEach((Monitor monit)->{
+            String nomePasta = monit.getPathFileClear();
             String data = monit.getDataCriacao().substring(0, 10);
             SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-            try {
-                Date newDate = dateFormatter.parse(data);
-                timeSeries.add(new Day(newDate),monit.getDirectorySizeGB());
-            } catch (ParseException ex) {
-                Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+            if (monit.getDirectorySizeGB()>5  && //tira do grafico pastas menores que 5gb
+                    !monit.getPathFile().equals("d:\\")&& //remove diretorios do sistema ou sem importancia.
+                    !monit.getPathFile().equals("d:\\$RECYCLE.BIN")&&
+                    !monit.getPathFile().equals("d:\\System Volume Information")&&
+                    !monit.getPathFile().equals("d:\\Wallpaper")&&
+                    !monit.getPathFile().equals("d:\\usuários\\")&&
+                    !monit.getPathFile().equals("d:\\Usuários")&&
+                    !monit.getPathFile().equals("d:\\Biblioteca")&&
+                    !monit.getPathFile().equals("d:\\Documentos")&&
+                    !monit.getPathFile().equals("d:\\RECYCLER")) {
+                
+                if (!this.pathFileTime.equals(monit.getPathFile())) {
+                    if (!this.pathFileTime.equals("")) {
+                        //Toda vez que mudar de pasta salva na colecao antes de iniciar outra
+                        timeCollection.addSeries(this.timeSeries);
+                    }
+                    this.timeSeries = new TimeSeries(nomePasta);
+                    try {
+                        Date newDate = dateFormatter.parse(data);
+                        //Guarda as informacoes pra depois montar o dataset do grafico
+                        this.timeSeries.add(new Day(newDate),monit.getDirectorySizeGB());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    this.pathFileTime = monit.getPathFile();
+                }else{
+                    try {
+                        Date newDate = dateFormatter.parse(data);
+                        //Guarda as informacoes pra depois montar o dataset do grafico
+                        this.timeSeries.add(new Day(newDate),monit.getDirectorySizeGB());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
+            
         });
-        timeCollection.addSeries(timeSeries);
+        
+        //timeCollection.addSeries(t1);
         XYDataset dataset = timeCollection;
         
-        this.freeChart = ChartFactory.createTimeSeriesChart("Gráfico por Tempo", "Data", "Tamanho", dataset, true,true,false);
+        this.freeChart = ChartFactory.createTimeSeriesChart("Gráfico por Tempo", "Data", "Tamanho", dataset, true,true,true);
+        XYPlot plot = this.freeChart.getXYPlot();
+        plot.setWeight(300);
+//        plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
+        plot.setDomainCrosshairVisible(true);
+        plot.setRangeCrosshairVisible(true);
+        
+        final XYItemRenderer renderer = plot.getRenderer();
+        if (renderer instanceof StandardXYItemRenderer) {
+            final StandardXYItemRenderer rr = (StandardXYItemRenderer) renderer;
+            //rr.setPlotShapes(true);
+            rr.setShapesFilled(true);
+            rr.setItemLabelsVisible(true);
+        }
         this.chartPnl = new ChartPanel(freeChart);
-        this.jPGrafico.removeAll();
-        this.jPGrafico.add(chartPnl);
-        this.jPGrafico.updateUI();
+        this.jTabbedPane1.add("Gráfico por tempo", chartPnl);
+    }
+
+    private void carregaGraficoPizza() {
+        this.pieDataset = new DefaultPieDataset();
+        this.listMonitor.stream().forEach((Monitor monit)->{
+             
+            if (monit.getDirectorySizeGB()>5  && //tira do grafico pastas menores que 5gb
+                    !monit.getPathFile().equals("d:\\")&& //remove diretorios do sistema ou sem importancia.
+                    !monit.getPathFile().equals("d:\\$RECYCLE.BIN")&&
+                    !monit.getPathFile().equals("d:\\System Volume Information")&&
+                    !monit.getPathFile().equals("d:\\Wallpaper")&&
+                    !monit.getPathFile().equals("d:\\usuários\\")&&
+                    !monit.getPathFile().equals("d:\\Usuários")&&
+                    !monit.getPathFile().equals("d:\\Biblioteca")&&
+                    !monit.getPathFile().equals("d:\\Documentos")&&
+                    !monit.getPathFile().equals("d:\\RECYCLER")) {
+                this.pieDataset.setValue(monit.getPathFileClear(), monit.getDirectorySizeGB());
+             }
+        });
+        this.freeChart = ChartFactory.createPieChart("Utilização Atual", this.pieDataset, true, true, false);
+        PieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator("{0}: ({1}GB,{2})");
+        PiePlot plot = (PiePlot) this.freeChart.getPlot();
+        plot.setLabelGenerator(labelGenerator);
+        this.chartPnl = new ChartPanel(freeChart);
+        this.jTabbedPane1.add("Utilização atual",this.chartPnl);
     }
 
 }
