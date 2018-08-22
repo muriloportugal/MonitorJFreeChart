@@ -7,70 +7,79 @@ package telas;
 
 import db.CRUDMonitor;
 import entidade.Monitor;
-import java.awt.BorderLayout;
+import entidade.MonitorModelo;
 import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import javax.swing.JList;
+import javax.swing.BoxLayout;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import org.jfree.chart.ChartFactory;
+import monitorjfreechart.Graficos;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.PieSectionLabelGenerator;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.plot.PiePlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.xy.XYDataset;
-
 /**
  *
  * @author murilo.portugal
  */
 public class Principal extends javax.swing.JFrame {
-
-    /**
-     * Creates new form Principal
-     */
     
     private final CRUDMonitor crudMonitor;
-    private final List<Monitor> listMonitor;
-    private final DefaultListModel<Monitor> defaultListModel;
+    private final ArrayList<Monitor> listAllMonitor;
+    private final ArrayList<Monitor> listAllMonitorAndTime;
+    private final ArrayList<String> removerMonitor;
     private final DefaultCategoryDataset dcd;
+    private final DefaultPieDataset pizzaDataset;
     private JFreeChart freeChart;
     private ChartPanel chartPnl;
-    private TimeSeries timeSeries;
-    private JList<Monitor> jListMonitor;
     private String pathFileTime = "";
-    private DefaultPieDataset pieDataset;
+    private TimeSeries timeSeries;
+    private final TimeSeriesCollection timeSeriesCollection;
     
     public Principal() {
         initComponents();
-        this.jListMonitor = new JList<>();
-        this.jListMonitor.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.jListMonitor.setFont(new Font(" ", Font.BOLD, 14));
-        this.jPLista.setLayout(new BorderLayout());
-        this.jPLista.add(this.jListMonitor);
-        this.crudMonitor = new CRUDMonitor();
-        this.listMonitor = crudMonitor.getAllMonitor(true);
-        this.defaultListModel = new DefaultListModel<>();
-        this.dcd = new DefaultCategoryDataset();
-        carregaGraficoUsoAtual();
-        carregaGraficoTempo();
-        carregaGraficoPizza();
+        this.jPMenu.setLayout(new BoxLayout(jPMenu, BoxLayout.Y_AXIS));
         
+        //Inicializa os objetos para recuperar os dados do banco
+        this.crudMonitor = new CRUDMonitor();
+        
+        //Carrega os dados na variavel listAllMonitor
+        //Exclui a pasta da raiz d:\\usuários\ por estar duplicada.
+        this.listAllMonitor = new ArrayList<>();
+        this.crudMonitor.getAllMonitor(true).forEach((monit)->{
+            if(!monit.getPathFileClear().equals(""))this.listAllMonitor.add(monit);
+        });
+        this.listAllMonitorAndTime = new ArrayList<>();
+        this.crudMonitor.getAllMonitor(false).forEach((monit)->{
+            if(!monit.getPathFileClear().equals(""))this.listAllMonitorAndTime.add(monit);
+        });
+        
+        //Cria a tabela do menu e adiciona no panel jPMenu
+        this.removerMonitor = new ArrayList<>();
+        this.jPMenu.add(new JScrollPane(carregaTabelaMenu()));
+        
+        this.dcd = new DefaultCategoryDataset();
+        this.pizzaDataset = new DefaultPieDataset();
+        this.timeSeriesCollection = new TimeSeriesCollection();
+        carregaDatasets();
+        this.timeSeriesCollection.setDomainIsPointsInTime(true);
+        Graficos graficos = new Graficos();
+        this.jTabbedPane1.add("Grafico Pizza",graficos.getGraficoPizza(pizzaDataset, "Utilização Atual"));
+        this.jTabbedPane1.add("Grafico Barras", graficos.getGraficoColunas(this.dcd, "Utilização Atual", "Data", "Tamanho (GB)"));
+        this.jTabbedPane1.add("Grafico Tempo",graficos.getGraficoSeriesTempo(timeSeriesCollection, "Consumo por tempo", "Data", "Tamanho (GB)"));
     }
 
     /**
@@ -82,25 +91,36 @@ public class Principal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPLista = new javax.swing.JPanel();
+        jPMenu = new javax.swing.JPanel();
         jPGrafico = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        javax.swing.GroupLayout jPListaLayout = new javax.swing.GroupLayout(jPLista);
-        jPLista.setLayout(jPListaLayout);
-        jPListaLayout.setHorizontalGroup(
-            jPListaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout jPMenuLayout = new javax.swing.GroupLayout(jPMenu);
+        jPMenu.setLayout(jPMenuLayout);
+        jPMenuLayout.setHorizontalGroup(
+            jPMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 207, Short.MAX_VALUE)
         );
-        jPListaLayout.setVerticalGroup(
-            jPListaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 455, Short.MAX_VALUE)
+        jPMenuLayout.setVerticalGroup(
+            jPMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
 
         jPGrafico.setLayout(new javax.swing.BoxLayout(jPGrafico, javax.swing.BoxLayout.LINE_AXIS));
         jPGrafico.add(jTabbedPane1);
+
+        jMenu1.setText("File");
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Edit");
+        jMenuBar1.add(jMenu2);
+
+        setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -108,19 +128,18 @@ public class Principal extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPLista, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jPGrafico, javax.swing.GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jPLista, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jPGrafico, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jPGrafico, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
+                    .addComponent(jPMenu, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -129,132 +148,114 @@ public class Principal extends javax.swing.JFrame {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPGrafico;
-    private javax.swing.JPanel jPLista;
+    private javax.swing.JPanel jPMenu;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
+    
+    private JTable carregaTabelaMenu() {
+        //Inicializa a tabela do menu
+        TableModelMonitor modelMonitor = new TableModelMonitor(listAllMonitor);
+        JTable table = new JTable(modelMonitor);
+        table.setFont(new Font(" ", Font.BOLD, 14));
+        table.setVisible(true);
+        //Oculta a coluna da tabela.
+        table.removeColumn(table.getColumnModel().getColumn(TableModelMonitor.CAMINHOCOMPLETO));
+        //Permite selecionar somente uma coluna
+        table.setColumnSelectionAllowed(true);
+        //Permite somente uma selecao por vez
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        //Cria o evento de click;
+        table.addMouseListener(new MouseAdapter() { 
 
-    private void carregaGraficoUsoAtual() {
-        listMonitor.stream().forEach((monit) -> {
-            
-            if (monit.getDirectorySizeGB()>5  && //tira do grafico pastas menores que 5gb
-                    !monit.getPathFile().equals("d:\\")&&
-                    !monit.getPathFile().equals("d:\\$RECYCLE.BIN")&&
-                    !monit.getPathFile().equals("d:\\System Volume Information")&&
-                    !monit.getPathFile().equals("d:\\Wallpaper")&&
-                    !monit.getPathFile().equals("d:\\usuários\\")&&
-                    !monit.getPathFile().equals("d:\\Usuários")&&
-                    !monit.getPathFile().equals("d:\\Biblioteca")&&
-                    !monit.getPathFile().equals("d:\\Documentos")&&
-                    !monit.getPathFile().equals("d:\\RECYCLER")) {
-                
-                this.defaultListModel.addElement(monit);
-                            
-                String linha = monit.getPathFileClear();
-                String coluna = monit.getDataCriacao().substring(0, 10);
-                //Monta o dataset do grafico
-                this.dcd.setValue(monit.getDirectorySizeGB(), linha, coluna);
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(table.getSelectedColumn()==TableModelMonitor.OCULTAR){
+                    MonitorModelo monitMod = modelMonitor.getMonitorValueAt(table.getSelectedRow());
+                    
+                    if(!monitMod.isOculto()){
+                        removerMonitor.remove(monitMod.getPathFile());
+                    }else{
+                        removerMonitor.add(monitMod.getPathFile());
+                    }
+                    carregaDatasets();
+                }
             }
-            
-        }); 
-        this.jListMonitor.setModel(defaultListModel);
-        //Cria o grafico
-        this.freeChart = ChartFactory.createBarChart3D("Utilização por pasta", "Tamanho (Giga)", "Data", dcd,PlotOrientation.VERTICAL,true,true,true);
-        //Adiciona o grafico a este panel para que possa ser exibido.
-        this.chartPnl = new ChartPanel(freeChart);
-        jTabbedPane1.add("Gráfico utilização Atual",chartPnl);
-    }
-
-    private void carregaGraficoTempo() {
-        List<Monitor> tempMonitor = crudMonitor.getAllMonitor(false);
-        TimeSeriesCollection timeCollection = new TimeSeriesCollection();
-
-        tempMonitor.stream().forEach((Monitor monit)->{
-            String nomePasta = monit.getPathFileClear();
-            String data = monit.getDataCriacao().substring(0, 10);
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
-            if (monit.getDirectorySizeGB()>5  && //tira do grafico pastas menores que 5gb
-                    !monit.getPathFile().equals("d:\\")&& //remove diretorios do sistema ou sem importancia.
-                    !monit.getPathFile().equals("d:\\$RECYCLE.BIN")&&
-                    !monit.getPathFile().equals("d:\\System Volume Information")&&
-                    !monit.getPathFile().equals("d:\\Wallpaper")&&
-                    !monit.getPathFile().equals("d:\\usuários\\")&&
-                    !monit.getPathFile().equals("d:\\Usuários")&&
-                    !monit.getPathFile().equals("d:\\Biblioteca")&&
-                    !monit.getPathFile().equals("d:\\Documentos")&&
-                    !monit.getPathFile().equals("d:\\RECYCLER")) {
-                
-                if (!this.pathFileTime.equals(monit.getPathFile())) {
-                    if (!this.pathFileTime.equals("")) {
-                        //Toda vez que mudar de pasta salva na colecao antes de iniciar outra
-                        timeCollection.addSeries(this.timeSeries);
-                    }
-                    this.timeSeries = new TimeSeries(nomePasta);
-                    try {
-                        Date newDate = dateFormatter.parse(data);
-                        //Guarda as informacoes pra depois montar o dataset do grafico
-                        this.timeSeries.add(new Day(newDate),monit.getDirectorySizeGB());
-                    } catch (ParseException ex) {
-                        Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    this.pathFileTime = monit.getPathFile();
-                }else{
-                    try {
-                        Date newDate = dateFormatter.parse(data);
-                        //Guarda as informacoes pra depois montar o dataset do grafico
-                        this.timeSeries.add(new Day(newDate),monit.getDirectorySizeGB());
-                    } catch (ParseException ex) {
-                        Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+        });
+        //Evento caso o usuário selecione com a barra de espaço
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (String.valueOf(e.getKeyChar()).equals(" ")&&
+                    table.getSelectedColumn()==TableModelMonitor.OCULTAR) {
+                    
+                    MonitorModelo monitMod = modelMonitor.getMonitorValueAt(table.getSelectedRow());
+                    if(monitMod.isOculto()){
+                        table.setValueAt(false, table.getSelectedRow(), table.getSelectedColumn());
+                        removerMonitor.remove(monitMod.getPathFile());
+                        carregaDatasets();
+                    }else{
+                        table.setValueAt(true, table.getSelectedRow(), table.getSelectedColumn());
+                        removerMonitor.add(monitMod.getPathFile());
+                        carregaDatasets();
                     }
                 }
             }
             
         });
-        
-        //timeCollection.addSeries(t1);
-        XYDataset dataset = timeCollection;
-        
-        this.freeChart = ChartFactory.createTimeSeriesChart("Gráfico por Tempo", "Data", "Tamanho", dataset, true,true,true);
-        XYPlot plot = this.freeChart.getXYPlot();
-        plot.setWeight(300);
-//        plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
-        plot.setDomainCrosshairVisible(true);
-        plot.setRangeCrosshairVisible(true);
-        
-        final XYItemRenderer renderer = plot.getRenderer();
-        if (renderer instanceof StandardXYItemRenderer) {
-            final StandardXYItemRenderer rr = (StandardXYItemRenderer) renderer;
-            //rr.setPlotShapes(true);
-            rr.setShapesFilled(true);
-            rr.setItemLabelsVisible(true);
-        }
-        this.chartPnl = new ChartPanel(freeChart);
-        this.jTabbedPane1.add("Gráfico por tempo", chartPnl);
+        return table;
     }
 
-    private void carregaGraficoPizza() {
-        this.pieDataset = new DefaultPieDataset();
-        this.listMonitor.stream().forEach((Monitor monit)->{
-             
-            if (monit.getDirectorySizeGB()>5  && //tira do grafico pastas menores que 5gb
-                    !monit.getPathFile().equals("d:\\")&& //remove diretorios do sistema ou sem importancia.
-                    !monit.getPathFile().equals("d:\\$RECYCLE.BIN")&&
-                    !monit.getPathFile().equals("d:\\System Volume Information")&&
-                    !monit.getPathFile().equals("d:\\Wallpaper")&&
-                    !monit.getPathFile().equals("d:\\usuários\\")&&
-                    !monit.getPathFile().equals("d:\\Usuários")&&
-                    !monit.getPathFile().equals("d:\\Biblioteca")&&
-                    !monit.getPathFile().equals("d:\\Documentos")&&
-                    !monit.getPathFile().equals("d:\\RECYCLER")) {
-                this.pieDataset.setValue(monit.getPathFileClear(), monit.getDirectorySizeGB());
-             }
+    private void carregaDatasets() {
+        this.dcd.clear();
+        this.pizzaDataset.clear();
+        if(this.timeSeries!=null){
+            this.timeSeries.clear();
+            this.timeSeriesCollection.removeAllSeries();
+        }
+        listAllMonitor.stream().forEach((monit) -> {
+            //Remove do grafico as pastas selecionadas e a pasta usuários da raiz.
+            if (!removerMonitor.contains(monit.getPathFile())) {
+                String linha = monit.getPathFileClear();
+                String coluna = monit.getDataCriacao().substring(0, 10);
+                //Monta o dataset do grafico de barras
+                this.dcd.setValue(monit.getDirectorySizeGB(), linha, coluna);
+                //Monta o dataset do grafico de pizza
+                this.pizzaDataset.setValue(monit.getPathFileClear(), monit.getDirectorySizeGB()); 
+            }
         });
-        this.freeChart = ChartFactory.createPieChart("Utilização Atual", this.pieDataset, true, true, false);
-        PieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator("{0}: ({1}GB,{2})");
-        PiePlot plot = (PiePlot) this.freeChart.getPlot();
-        plot.setLabelGenerator(labelGenerator);
-        this.chartPnl = new ChartPanel(freeChart);
-        this.jTabbedPane1.add("Utilização atual",this.chartPnl);
+        //Cria o data set do grafico de tempo
+        this.listAllMonitorAndTime.forEach((monit)->{
+            //Remove do grafico as pastas selecionadas e a pasta usuários da raiz.
+            if(!removerMonitor.contains(monit.getPathFile())){
+                //Monta o dataset do grafico de tempo
+                if(!this.pathFileTime.equals(monit.getPathFile())){
+                    if (!this.pathFileTime.equals("")){
+                        //Toda vez que mudar de pasta salva na coleção antes de iniciar outra
+                        this.timeSeriesCollection.addSeries(this.timeSeries);
+                    }
+                    this.timeSeries = new TimeSeries(monit.getPathFileClear(),Day.class);
+                    this.timeSeries.add(new Day(String2Date(monit.getDataCriacao().substring(0, 10))), monit.getDirectorySizeGB());
+                    this.pathFileTime = monit.getPathFile();
+                }else{
+                    this.timeSeries.add(new Day(String2Date(monit.getDataCriacao().substring(0, 10))), monit.getDirectorySizeGB());
+                }
+            }
+        });
+    }
+    
+    private Date String2Date(String data){
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date dataFormatada=null;
+        try {
+            dataFormatada = dateFormatter.parse(data);
+        } catch (ParseException ex) {
+            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return dataFormatada;
     }
 
 }

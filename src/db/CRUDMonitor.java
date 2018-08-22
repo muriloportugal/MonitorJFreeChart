@@ -21,21 +21,22 @@ import java.util.logging.Logger;
  */
 public class CRUDMonitor {
     
-    private List<Monitor> monitorList;
+    private ArrayList<Monitor> monitorList;
     private Connection sqlConnection;
     private PreparedStatement pstmt;
     private ResultSet result;
     
-    public List<Monitor> getAllMonitor(boolean groupByPathFile){
+    public ArrayList<Monitor> getAllMonitor(boolean groupByPathFile){
         this.sqlConnection = new ConexaoSqlite().conectar();
-        String sqlSelect = "";
+        String sqlSelect;
         if (groupByPathFile) {
             sqlSelect = "SELECT *, (DirectorySize /1073741824) as DirectorySizeGB " +
-                                    "FROM monitor group by Pathfile " +
+                                    "FROM monitor WHERE DirectorySizeGB > 5 " +
+                                    "group by Pathfile " +
                                     "order by DirectorySizeGB;";
         }else{
             sqlSelect = "SELECT *, (DirectorySize /1073741824) as DirectorySizeGB " +
-                                    "FROM monitor " +
+                                    "FROM monitor WHERE DirectorySizeGB > 5 " +
                                     "order by Pathfile, datacriacao;";
         }
         try {

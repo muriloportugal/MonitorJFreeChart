@@ -30,16 +30,4 @@ public class ConexaoSqlite {
         }
         return this.conexao;
     }
-    
-//    public boolean desconectar(){
-//        try {
-//            if(this.conexao.isClosed() == false){
-//                this.conexao.close();
-//            }
-//        } catch (Exception e) {
-//            System.out.println(e.getMessage());
-//            return false;
-//        }
-//        return true;
-//    }
 }

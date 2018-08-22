@@ -119,7 +119,13 @@ public class Monitor {
     }
     
    public String getPathFileClear(){
-       return this.getPathFile().substring(this.getPathFile().lastIndexOf("\\")+1, this.getPathFile().length());
+       String nomePasta;
+       if (this.getPathFile().equals("d:\\")) {
+           nomePasta = "D:\\";
+       }else{
+           nomePasta = this.getPathFile().substring(this.getPathFile().lastIndexOf("\\")+1, this.getPathFile().length());
+       }
+       return nomePasta;
    }
        
 }

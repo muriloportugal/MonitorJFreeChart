@@ -35,13 +35,11 @@ public class MonitorJFreeChart {
         }
         
                 /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                Principal principal = new Principal();
-                principal.setSize(900, 600);
-                principal.setExtendedState(principal.MAXIMIZED_BOTH);
-                principal.setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            Principal principal = new Principal();
+            principal.setSize(900, 600);
+            principal.setExtendedState(principal.MAXIMIZED_BOTH);
+            principal.setVisible(true);
         });
     }
     
